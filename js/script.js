@@ -24,7 +24,6 @@ function getCanvasSize() {
   };
 }
 
-// Game constants (proportional to canvas size)
 function getConstants() {
   const { width, height } = getCanvasSize();
   return {
@@ -240,7 +239,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Controls
+// Controls: Arrow keys for desktop
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowUp') playerPaddle.dy = -constants.PADDLE_SPEED;
   if (e.key === 'ArrowDown') playerPaddle.dy = constants.PADDLE_SPEED;
@@ -249,6 +248,7 @@ document.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') playerPaddle.dy = 0;
 });
 
+// Mouse controls: vertical movement
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   const mouseY = e.clientY - rect.top;
@@ -256,6 +256,28 @@ canvas.addEventListener('mousemove', e => {
   playerPaddle.y = Math.max(0, Math.min(constants.HEIGHT - playerPaddle.height, playerPaddle.y));
 });
 
+// Touch controls for mobile: horizontal drag -> vertical paddle
+function isMobile() {
+  return window.innerWidth < 700 || 'ontouchstart' in window;
+}
+
+if (isMobile()) {
+  canvas.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      // Map horizontal position to vertical paddle position
+      const x = touch.clientX - rect.left;
+      // Normalized [0, 1]
+      const xNorm = Math.max(0, Math.min(1, x / rect.width));
+      playerPaddle.y = xNorm * (constants.HEIGHT - playerPaddle.height);
+      playerPaddle.y = Math.max(0, Math.min(constants.HEIGHT - playerPaddle.height, playerPaddle.y));
+      e.preventDefault();
+    }
+  }, {passive: false});
+}
+
+// On resize, update everything
 resizeCanvas();
 updateConstantsAndObjects();
 updateStats();
