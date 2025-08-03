@@ -10,30 +10,34 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 40px;
+  margin-top: 32px;
+  min-height: 100vh;
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 2.4rem;
   margin-bottom: 20px;
   font-weight: 700;
   letter-spacing: 2px;
   color: #00adb5;
+  text-align: center;
 }
 
 #stats {
   display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
+  gap: 20px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .stat {
   font-size: 1rem;
-  padding: 10px 32px;
-  border-radius: 12px;
+  padding: 9px 28px;
+  border-radius: 10px;
   font-weight: 600;
   letter-spacing: 1px;
-  min-width: 52px;
+  min-width: 44px;
   text-align: center;
   box-shadow: 0 2px 12px #2225;
 }
@@ -54,10 +58,12 @@ h1 {
   background: #171c24;
   border-radius: 16px;
   box-shadow: 0 4px 32px #0008;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   border: none;
   display: block;
   transition: box-shadow 0.2s;
+  max-width: 100vw;
+  height: auto;
 }
 
 #pong:focus {
@@ -68,19 +74,65 @@ h1 {
 .controls {
   font-size: 1rem;
   color: #c0c0c0;
-  padding: 10px 24px;
+  padding: 8px 18px;
   border-radius: 8px;
   background: #232c39;
   margin-bottom: 14px;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 8px #2223;
+  text-align: center;
 }
 
+/* Responsive for tablet and mobile */
 @media (max-width: 980px) {
   #pong {
     width: 98vw;
+    height: 60vw;
+    max-width: 98vw;
+    max-height: 60vw;
   }
   main {
     padding: 10px 0;
+  }
+  h1 {
+    font-size: 2rem;
+  }
+  #stats {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  #pong {
+    width: 98vw;
+    height: 60vw;
+    max-width: 98vw;
+    max-height: 60vw;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 14px;
+  }
+  .stat {
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    min-width: 36px;
+  }
+  .controls {
+    font-size: 0.92rem;
+    padding: 7px 12px;
+  }
+}
+
+/* Make canvas full width for very small screens */
+@media (max-width: 450px) {
+  #pong {
+    width: 99vw;
+    height: 55vw;
+    max-width: 99vw;
+    max-height: 55vw;
+  }
+  main {
+    margin-top: 16px;
   }
 }

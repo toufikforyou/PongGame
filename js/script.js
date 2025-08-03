@@ -1,43 +1,107 @@
 const canvas = document.getElementById('pong');
 const ctx = canvas.getContext('2d');
 
-// Game constants
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
-const PADDLE_WIDTH = 12;
-const PADDLE_HEIGHT = 98;
-const BALL_RADIUS = 12;
-const PADDLE_SPEED = 7;
-const COMPUTER_EASE = 0.11; // Smoother AI
+// Responsive: adjust canvas size to parent container on resize
+function resizeCanvas() {
+  const parentWidth = canvas.parentElement.offsetWidth;
+  // Maintain aspect ratio 900:550
+  let width = parentWidth;
+  let height = Math.round(width * (550 / 900));
+  if (width > 900) {
+    width = 900;
+    height = 550;
+  }
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function getCanvasSize() {
+  return {
+    width: canvas.width,
+    height: canvas.height
+  };
+}
+
+// Game constants (proportional to canvas size)
+function getConstants() {
+  const { width, height } = getCanvasSize();
+  return {
+    WIDTH: width,
+    HEIGHT: height,
+    PADDLE_WIDTH: Math.round(width * 0.013),
+    PADDLE_HEIGHT: Math.round(height * 0.18),
+    BALL_RADIUS: Math.round(width * 0.013),
+    PADDLE_SPEED: Math.max(5, Math.round(height * 0.014)),
+    COMPUTER_EASE: 0.11,
+  };
+}
 
 let successCount = 0;
 let errorCount = 0;
 
-const playerPaddle = {
-  x: 20,
-  y: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-  width: PADDLE_WIDTH,
-  height: PADDLE_HEIGHT,
+let constants = getConstants();
+
+let playerPaddle = {
+  x: constants.WIDTH * 0.022,
+  y: constants.HEIGHT / 2 - constants.PADDLE_HEIGHT / 2,
+  width: constants.PADDLE_WIDTH,
+  height: constants.PADDLE_HEIGHT,
   dy: 0
 };
 
-const computerPaddle = {
-  x: WIDTH - 20 - PADDLE_WIDTH,
-  y: HEIGHT / 2 - PADDLE_HEIGHT / 2,
-  width: PADDLE_WIDTH,
-  height: PADDLE_HEIGHT,
+let computerPaddle = {
+  x: constants.WIDTH - constants.WIDTH * 0.022 - constants.PADDLE_WIDTH,
+  y: constants.HEIGHT / 2 - constants.PADDLE_HEIGHT / 2,
+  width: constants.PADDLE_WIDTH,
+  height: constants.PADDLE_HEIGHT,
   dy: 0
 };
 
-const ball = {
-  x: WIDTH / 2,
-  y: HEIGHT / 2,
-  radius: BALL_RADIUS,
-  speed: 7,
-  dx: 7 * (Math.random() < 0.5 ? 1 : -1),
+let ball = {
+  x: constants.WIDTH / 2,
+  y: constants.HEIGHT / 2,
+  radius: constants.BALL_RADIUS,
+  speed: Math.max(5, constants.WIDTH * 0.008),
+  dx: Math.max(5, constants.WIDTH * 0.008) * (Math.random() < 0.5 ? 1 : -1),
   dy: (Math.random() * 4 - 2)
 };
 
+function updateConstantsAndObjects() {
+  constants = getConstants();
+  playerPaddle = {
+    x: constants.WIDTH * 0.022,
+    y: constants.HEIGHT / 2 - constants.PADDLE_HEIGHT / 2,
+    width: constants.PADDLE_WIDTH,
+    height: constants.PADDLE_HEIGHT,
+    dy: 0
+  };
+
+  computerPaddle = {
+    x: constants.WIDTH - constants.WIDTH * 0.022 - constants.PADDLE_WIDTH,
+    y: constants.HEIGHT / 2 - constants.PADDLE_HEIGHT / 2,
+    width: constants.PADDLE_WIDTH,
+    height: constants.PADDLE_HEIGHT,
+    dy: 0
+  };
+
+  ball = {
+    x: constants.WIDTH / 2,
+    y: constants.HEIGHT / 2,
+    radius: constants.BALL_RADIUS,
+    speed: Math.max(5, constants.WIDTH * 0.008),
+    dx: Math.max(5, constants.WIDTH * 0.008) * (Math.random() < 0.5 ? 1 : -1),
+    dy: (Math.random() * 4 - 2)
+  };
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  updateConstantsAndObjects();
+});
+
+// Drawing helpers
 function drawRect(x, y, w, h, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
@@ -57,31 +121,43 @@ function drawNet() {
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 16]);
   ctx.beginPath();
-  ctx.moveTo(WIDTH/2, 0);
-  ctx.lineTo(WIDTH/2, HEIGHT);
+  ctx.moveTo(constants.WIDTH/2, 0);
+  ctx.lineTo(constants.WIDTH/2, constants.HEIGHT);
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
 }
 
 function draw() {
-  // Background
+  ctx.clearRect(0, 0, constants.WIDTH, constants.HEIGHT);
   ctx.fillStyle = "#181818";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillRect(0, 0, constants.WIDTH, constants.HEIGHT);
 
   drawNet();
 
   // Paddles
-  drawRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height, "#c5f7d6");
-  drawRect(computerPaddle.x, computerPaddle.y, computerPaddle.width, computerPaddle.height, "#ffe0e0");
+  drawRect(
+    playerPaddle.x,
+    playerPaddle.y,
+    playerPaddle.width,
+    playerPaddle.height,
+    "#c5f7d6"
+  );
+  drawRect(
+    computerPaddle.x,
+    computerPaddle.y,
+    computerPaddle.width,
+    computerPaddle.height,
+    "#ffe0e0"
+  );
 
   // Ball
   drawCircle(ball.x, ball.y, ball.radius, "#fff");
 }
 
 function resetBall(direction = null) {
-  ball.x = WIDTH / 2;
-  ball.y = HEIGHT / 2;
+  ball.x = constants.WIDTH / 2;
+  ball.y = constants.HEIGHT / 2;
   ball.dx = ball.speed * ((direction !== null) ? direction : (Math.random() < 0.5 ? 1 : -1));
   ball.dy = (Math.random() * 4 - 2);
 }
@@ -89,13 +165,13 @@ function resetBall(direction = null) {
 function update() {
   // Move player paddle
   playerPaddle.y += playerPaddle.dy;
-  playerPaddle.y = Math.max(0, Math.min(HEIGHT - playerPaddle.height, playerPaddle.y));
+  playerPaddle.y = Math.max(0, Math.min(constants.HEIGHT - playerPaddle.height, playerPaddle.y));
 
   // Computer AI
   let targetY = ball.y - computerPaddle.height/2;
   let delta = targetY - computerPaddle.y;
-  computerPaddle.y += delta * COMPUTER_EASE;
-  computerPaddle.y = Math.max(0, Math.min(HEIGHT - computerPaddle.height, computerPaddle.y));
+  computerPaddle.y += delta * constants.COMPUTER_EASE;
+  computerPaddle.y = Math.max(0, Math.min(constants.HEIGHT - computerPaddle.height, computerPaddle.y));
 
   // Move ball
   ball.x += ball.dx;
@@ -105,8 +181,8 @@ function update() {
   if (ball.y - ball.radius < 0) {
     ball.y = ball.radius;
     ball.dy = -ball.dy;
-  } else if (ball.y + ball.radius > HEIGHT) {
-    ball.y = HEIGHT - ball.radius;
+  } else if (ball.y + ball.radius > constants.HEIGHT) {
+    ball.y = constants.HEIGHT - ball.radius;
     ball.dy = -ball.dy;
   }
 
@@ -148,7 +224,7 @@ function update() {
     updateStats();
     resetBall(1);
   }
-  if (ball.x + ball.radius > WIDTH) {
+  if (ball.x + ball.radius > constants.WIDTH) {
     resetBall(-1);
   }
 }
@@ -166,8 +242,8 @@ function gameLoop() {
 
 // Controls
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowUp') playerPaddle.dy = -PADDLE_SPEED;
-  if (e.key === 'ArrowDown') playerPaddle.dy = PADDLE_SPEED;
+  if (e.key === 'ArrowUp') playerPaddle.dy = -constants.PADDLE_SPEED;
+  if (e.key === 'ArrowDown') playerPaddle.dy = constants.PADDLE_SPEED;
 });
 document.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') playerPaddle.dy = 0;
@@ -177,9 +253,10 @@ canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
   const mouseY = e.clientY - rect.top;
   playerPaddle.y = mouseY - playerPaddle.height/2;
-  playerPaddle.y = Math.max(0, Math.min(HEIGHT - playerPaddle.height, playerPaddle.y));
+  playerPaddle.y = Math.max(0, Math.min(constants.HEIGHT - playerPaddle.height, playerPaddle.y));
 });
 
-// Start game
+resizeCanvas();
+updateConstantsAndObjects();
 updateStats();
 gameLoop();
